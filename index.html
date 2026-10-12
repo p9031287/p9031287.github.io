@@ -1,11 +1,112 @@
-<!DOCTYPE html><html lang="fa" dir="rtl">
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>پنل مدیریت لایسنس</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مدیریت لایسنس</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1020;color:#eaf0ff;font-family:Arial,sans-serif;padding:20px}
+.container{max-width:460px;margin:25px auto}
+h2{text-align:center;margin-bottom:8px}
+.sub{text-align:center;color:#8d9bb8;font-size:13px;margin-bottom:25px}
+.card{background:#151e30;border:1px solid #27344d;padding:20px;border-radius:18px}
+label{display:block;margin:15px 0 8px;font-size:14px}
+input,select{width:100%;padding:13px;background:#0b1020;border:1px solid #34425d;border-radius:10px;color:white;font-size:15px;outline:none}
+input:focus,select:focus{border-color:#0785ff}
+button{width:100%;border:0;border-radius:10px;padding:14px;font-size:15px;font-weight:bold;cursor:pointer;margin-top:14px}
+.primary{background:#0785ff;color:white}
+.secondary{background:#25334c;color:#eaf0ff}
+#output{display:none;margin-top:20px}
+pre{direction:ltr;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;background:#080d18;padding:15px;border-radius:10px;color:#9fe8c0;font-size:13px}
+.note{font-size:12px;color:#93a4c4;line-height:1.9;margin-top:15px}
+#status{font-size:13px;text-align:center;margin-top:12px;color:#7de5a3}
+</style>
 </head>
-<body style="background:#101318;color:white;font-family:sans-serif;text-align:center;padding:40px">
+<body>
+<div class="container">
   <h2>پنل مدیریت لایسنس</h2>
-  <p>سایت با موفقیت ساخته شد.</p>
+  <div class="sub">ساخت اطلاعات و کلید کاربران</div>
+
+  <div class="card">
+    <label for="device">شناسه دستگاه (Device ID)</label>
+    <input id="device" placeholder="مثلاً device-123" autocomplete="off">
+
+    <label for="key">کلید لایسنس (Key)</label>
+    <input id="key" placeholder="کلید کاربر را وارد کن" autocomplete="off">
+
+    <label for="expiry">تاریخ انقضا</label>
+    <input id="expiry" type="date" value="2099-12-31">
+
+    <label for="offline">اجازه ورود آفلاین</label>
+    <select id="offline">
+      <option value="false">غیرفعال</option>
+      <option value="true">فعال</option>
+    </select>
+
+    <button class="primary" onclick="generate()">ساخت JSON</button>
+
+    <div id="output">
+      <label>خروجی JSON</label>
+      <pre id="json"></pre>
+      <button class="secondary" onclick="copyJSON()">کپی JSON</button>
+    </div>
+    <div id="status"></div>
+    <div class="note">
+      این صفحه فقط JSON تولید می‌کند. برای ذخیره لایسنس در سرور باید API امن متصل شود.
+    </div>
+  </div>
+</div>
+
+<script>
+function generate(){
+  const device = document.getElementById('device').value.trim();
+  const key = document.getElementById('key').value.trim();
+  const date = document.getElementById('expiry').value;
+  const offline = document.getElementById('offline').value === 'true';
+  const status = document.getElementById('status');
+
+  if(!device || !key || !date){
+    status.style.color = '#ff8585';
+    status.textContent = 'همه فیلدها را تکمیل کن.';
+    return;
+  }
+
+  const parts = date.split('-');
+  const expirydate = parts[2] + '-' + parts[1] + '-' + parts[0];
+
+  const data = {
+    device_id: device,
+    key: key,
+    expirydate: expirydate,
+    Allowoffline: offline
+  };
+
+  document.getElementById('json').textContent =
+    JSON.stringify(data, null, 4);
+
+  document.getElementById('output').style.display = 'block';
+  status.style.color = '#7de5a3';
+  status.textContent = 'JSON با موفقیت ساخته شد.';
+}
+
+async function copyJSON(){
+  const text = document.getElementById('json').textContent;
+  try{
+    await navigator.clipboard.writeText(text);
+    document.getElementById('status').textContent = 'JSON کپی شد.';
+  }catch(e){
+    const area = document.createElement('textarea');
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand('copy');
+    area.remove();
+    document.getElementById('status').textContent =
+      ok ? 'JSON کپی شد.' : 'متن را دستی کپی کن.';
+  }
+}
+</script>
 </body>
 </html>
